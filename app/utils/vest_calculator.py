@@ -67,11 +67,11 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
     """
     vest_events = []
     
-    # Handle ESPP separately (immediate)
+    # Handle ESPP separately (immediate vest on grant date)
+    # For ESPP, the grant_date is the actual receipt/vest date
     if grant.grant_type in [GrantType.ESPP.value, GrantType.NQESPP.value]:
-        vest_date = get_next_espp_date(grant.grant_date)
         vest_events.append({
-            'vest_date': vest_date,
+            'vest_date': grant.grant_date,  # ESPP vests immediately on grant date
             'shares': grant.share_quantity,
             'is_cliff': False
         })
