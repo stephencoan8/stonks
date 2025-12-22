@@ -28,11 +28,12 @@ def dashboard():
     # Get user's grants
     grants = Grant.query.filter_by(user_id=current_user.id).all()
     
-    # Calculate totals
+    # Calculate totals - use grant.current_value which handles ISOs correctly
     total_grants = len(grants)
     total_shares = sum(g.share_quantity for g in grants)
     current_price = get_latest_stock_price()
-    total_value = total_shares * current_price
+    # For total value, sum up each grant's current_value (which handles ISO spread correctly)
+    total_value = sum(g.current_value for g in grants)
     
     # Get upcoming vests (vest_date in the future)
     upcoming_vests = VestEvent.query.join(Grant).filter(
@@ -54,20 +55,32 @@ def dashboard():
     
     # Prepare vesting timeline data for chart
     vesting_timeline = []
-    cumulative_vested = 0
-    cumulative_total = 0
+    cumulative_vested_shares = 0
+    cumulative_total_shares = 0
+    cumulative_vested_value = 0
+    cumulative_total_value = 0
     
     for vest in all_vest_events:
-        cumulative_total += vest.shares_received  # Use net shares received
+        shares = vest.shares_received  # Use net shares received
+        # Use the value at vest date (historical price), not current price
+        value = vest.net_value  # This uses price_at_vest (historical)
+        
+        cumulative_total_shares += shares
+        cumulative_total_value += value
+        
         if vest.has_vested:
-            cumulative_vested += vest.shares_received
+            cumulative_vested_shares += shares
+            cumulative_vested_value += value
         
         vesting_timeline.append({
             'date': vest.vest_date.strftime('%Y-%m-%d'),
-            'vested': cumulative_vested,
-            'total': cumulative_total,
+            'vested_shares': cumulative_vested_shares,
+            'total_shares': cumulative_total_shares,
+            'vested_value': cumulative_vested_value,
+            'total_value': cumulative_total_value,
             'is_vested': vest.has_vested,
-            'shares': vest.shares_received
+            'shares': shares,
+            'value': value
         })
     
     return render_template('main/dashboard.html',

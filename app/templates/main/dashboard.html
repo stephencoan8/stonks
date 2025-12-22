@@ -147,8 +147,9 @@ function createChart(view) {
     
     // Parse dates to Date objects for proper time scale
     const dates = vestingData.map(d => new Date(d.date));
-    const vestedData = vestingData.map(d => view === 'value' ? d.vested * currentPrice : d.vested);
-    const totalData = vestingData.map(d => view === 'value' ? d.total * currentPrice : d.total);
+    // Use pre-calculated values from backend (already includes historical prices)
+    const vestedData = vestingData.map(d => view === 'value' ? d.vested_value : d.vested_shares);
+    const totalData = vestingData.map(d => view === 'value' ? d.total_value : d.total_shares);
     
     // Split data into vested and unvested portions
     const vestedDates = dates.slice(0, transitionIndex >= 0 ? transitionIndex : dates.length);
