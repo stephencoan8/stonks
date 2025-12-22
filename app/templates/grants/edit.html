@@ -109,8 +109,11 @@
     // Show/hide conditional fields based on grant type
     const grantTypeSelect = document.getElementById('grant_type');
     const bonusTypeGroup = document.getElementById('bonus_type_group');
+    const bonusTypeSelect = document.getElementById('bonus_type');
     const vestYearsGroup = document.getElementById('vest_years_group');
+    const vestYearsInput = document.getElementById('vest_years');
     const shareTypeGroup = document.getElementById('share_type_group');
+    const shareTypeSelect = document.getElementById('share_type');
 
     function updateFormFields() {
         const grantType = grantTypeSelect.value;
@@ -118,22 +121,30 @@
         // Show bonus type for annual performance
         if (grantType === 'annual_performance') {
             bonusTypeGroup.style.display = 'block';
+            bonusTypeSelect.removeAttribute('disabled');
         } else {
             bonusTypeGroup.style.display = 'none';
+            bonusTypeSelect.setAttribute('disabled', 'disabled');
         }
         
         // Show vest years for kickass
         if (grantType === 'kickass') {
             vestYearsGroup.style.display = 'block';
+            vestYearsInput.setAttribute('required', 'required');
+            vestYearsInput.removeAttribute('disabled');
         } else {
             vestYearsGroup.style.display = 'none';
+            vestYearsInput.removeAttribute('required');
+            vestYearsInput.setAttribute('disabled', 'disabled');
         }
         
         // Hide share type for ESPP
         if (grantType === 'espp' || grantType === 'nqespp') {
             shareTypeGroup.style.display = 'none';
+            shareTypeSelect.setAttribute('disabled', 'disabled');
         } else {
             shareTypeGroup.style.display = 'block';
+            shareTypeSelect.removeAttribute('disabled');
         }
     }
 

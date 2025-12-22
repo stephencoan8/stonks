@@ -139,10 +139,10 @@ def edit_grant(grant_id):
             # Parse form data
             grant_date = datetime.strptime(request.form.get('grant_date'), '%Y-%m-%d').date()
             grant_type = request.form.get('grant_type')
-            share_type = request.form.get('share_type')
+            share_type = request.form.get('share_type') or grant.share_type  # Keep existing if disabled
             share_quantity = float(request.form.get('share_quantity'))
-            bonus_type = request.form.get('bonus_type')
-            vest_years = request.form.get('vest_years')
+            bonus_type = request.form.get('bonus_type') or None
+            vest_years = request.form.get('vest_years') or None
             notes = request.form.get('notes', '')
             
             print(f"DEBUG: Parsed data - Date: {grant_date}, Type: {grant_type}, Shares: {share_quantity}")
