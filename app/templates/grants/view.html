@@ -65,9 +65,9 @@
                             <th>Vest Date</th>
                             <th>Shares Vesting</th>
                             <th>Value at Vest</th>
-                            <th>Payment Method</th>
-                            <th>Cash to Cover</th>
-                            <th>Shares Withheld</th>
+                            <th>Cash Paid</th>
+                            <th>Fully Covered?</th>
+                            <th>Shares Sold</th>
                             <th>Shares Received</th>
                             <th>Net Value</th>
                             <th>Status</th>
@@ -81,31 +81,26 @@
                             <td class="shares-vesting">{{ "{:,.2f}".format(vest.shares_vested) }}</td>
                             <td class="vest-value">${{ "{:,.2f}".format(vest.value_at_vest) }}</td>
                             <td>
-                                <select class="payment-method" data-vest-id="{{ vest.id }}">
-                                    <option value="sell_to_cover" {% if vest.payment_method == 'sell_to_cover' %}selected{% endif %}>Sell to Cover</option>
-                                    <option value="cash_to_cover" {% if vest.payment_method == 'cash_to_cover' %}selected{% endif %}>Cash to Cover</option>
+                                <input type="number" 
+                                       class="cash-paid-input" 
+                                       data-vest-id="{{ vest.id }}"
+                                       value="{{ '{:.2f}'.format(vest.cash_paid) if vest.cash_paid else '' }}" 
+                                       step="0.01" min="0" placeholder="$0.00" style="width: 80px;">
+                            </td>
+                            <td>
+                                <select class="cash-covered-select" data-vest-id="{{ vest.id }}" style="width: 65px;">
+                                    <option value="yes" {% if vest.cash_covered_all %}selected{% endif %}>Yes</option>
+                                    <option value="no" {% if not vest.cash_covered_all %}selected{% endif %}>No</option>
                                 </select>
                             </td>
                             <td>
                                 <input type="number" 
-                                       class="cash-input" 
+                                       class="shares-sold-input" 
                                        data-vest-id="{{ vest.id }}"
-                                       value="{{ '{:.2f}'.format(vest.cash_to_cover) if vest.cash_to_cover else '' }}" 
-                                       step="0.01" 
-                                       min="0"
-                                       placeholder="$0.00"
-                                       {% if vest.payment_method != 'cash_to_cover' %}disabled{% endif %}>
-                            </td>
-                            <td>
-                                <input type="number" 
-                                       class="shares-input" 
-                                       data-vest-id="{{ vest.id }}"
-                                       value="{{ '{:.2f}'.format(vest.shares_sold_to_cover) if vest.shares_sold_to_cover else '' }}" 
-                                       step="0.01" 
-                                       min="0"
-                                       max="{{ vest.shares_vested }}"
-                                       placeholder="0"
-                                       {% if vest.payment_method != 'sell_to_cover' %}disabled{% endif %}>
+                                       value="{{ '{:.0f}'.format(vest.shares_sold) if vest.shares_sold else '' }}" 
+                                       step="1" min="0" max="{{ vest.shares_vested }}"
+                                       placeholder="0" style="width: 60px;"
+                                       {% if vest.cash_covered_all %}disabled{% endif %}>
                             </td>
                             <td class="shares-received highlight">
                                 {{ "{:,.2f}".format(vest.shares_received) }}
@@ -140,53 +135,47 @@
 
 <script>
 // Handle payment method changes
-document.querySelectorAll('.payment-method').forEach(select => {
-    // Store the initial value
-    let previousValue = select.value;
-    
+// Handle "Fully Covered?" dropdown changes  
+document.querySelectorAll('.cash-covered-select').forEach(select => {
     select.addEventListener('change', function() {
-        // Only act if the value actually changed
-        if (this.value === previousValue) {
-            return;
-        }
-        
         const vestId = this.dataset.vestId;
         const row = document.querySelector(`tr[data-vest-id="${vestId}"]`);
-        const cashInput = row.querySelector('.cash-input');
-        const sharesInput = row.querySelector('.shares-input');
+        const sharesSoldInput = row.querySelector('.shares-sold-input');
         
-        if (this.value === 'cash_to_cover') {
-            cashInput.disabled = false;
-            cashInput.focus();
-            sharesInput.disabled = true;
-            // Only clear if we're actually switching methods
-            if (previousValue !== 'cash_to_cover') {
-                sharesInput.value = '';
-            }
+        if (this.value === 'no') {
+            sharesSoldInput.disabled = false;
+            sharesSoldInput.focus();
         } else {
-            cashInput.disabled = true;
-            sharesInput.disabled = false;
-            sharesInput.focus();
-            // Only clear if we're actually switching methods
-            if (previousValue !== 'sell_to_cover') {
-                cashInput.value = '';
-            }
+            sharesSoldInput.disabled = true;
+            sharesSoldInput.value = '';
+            updateSharesReceived(vestId);
         }
-        
-        // Update previous value
-        previousValue = this.value;
     });
 });
+
+// Update shares received when shares sold changes
+document.querySelectorAll('.shares-sold-input').forEach(input => {
+    input.addEventListener('input', function() {
+        updateSharesReceived(this.dataset.vestId);
+    });
+});
+
+function updateSharesReceived(vestId) {
+    const row = document.querySelector(`tr[data-vest-id="${vestId}"]`);
+    const sharesVesting = parseFloat(row.querySelector('.shares-vesting').textContent.replace(/,/g, '')) || 0;
+    const sharesSold = parseFloat(row.querySelector('.shares-sold-input').value) || 0;
+    const sharesReceived = sharesVesting - sharesSold;
+    row.querySelector('.shares-received').textContent = sharesReceived.toLocaleString('en-US', {maximumFractionDigits: 0});
+}
 
 // Handle save button clicks
 document.querySelectorAll('.save-vest-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         const vestId = this.dataset.vestId;
         const row = document.querySelector(`tr[data-vest-id="${vestId}"]`);
-        const paymentMethodSelect = row.querySelector('.payment-method');
-        const paymentMethod = paymentMethodSelect.value;
-        const cashInput = row.querySelector('.cash-input');
-        const sharesInput = row.querySelector('.shares-input');
+        const cashPaidInput = row.querySelector('.cash-paid-input');
+        const cashCoveredSelect = row.querySelector('.cash-covered-select');
+        const sharesSoldInput = row.querySelector('.shares-sold-input');
         const sharesReceivedCell = row.querySelector('.shares-received');
         const netValueCell = row.querySelector('.net-value');
         
@@ -196,9 +185,9 @@ document.querySelectorAll('.save-vest-btn').forEach(btn => {
         console.log('Shares sold:', sharesInput.value);
         
         const formData = new FormData();
-        formData.append('payment_method', paymentMethod);
-        formData.append('cash_to_cover', cashInput.value || 0);
-        formData.append('shares_sold_to_cover', sharesInput.value || 0);
+        formData.append('cash_paid', cashPaidInput.value || 0);
+        formData.append('cash_covered_all', cashCoveredSelect.value === 'yes' ? 'true' : 'false');
+        formData.append('shares_sold', sharesSoldInput.value || 0);
         
         try {
             btn.textContent = 'Saving...';
