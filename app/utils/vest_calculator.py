@@ -130,28 +130,14 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
         cliff_date = vesting_start + relativedelta(months=6)
     else:
         # RSU/RSA: Use standard SpaceX vest dates (6/15 or 11/15)
-        # For annual bonuses (1 year cliff), find the closest vest date to the cliff
-        # For longer cliffs, use the standard next vest date logic
+        # Calculate the actual cliff date, then find the closest vest date
         cliff_months = int(grant.cliff_years * 12)
         
-        if grant.grant_type == GrantType.ANNUAL_PERFORMANCE.value and grant.cliff_years == 1.0:
-            # Calculate actual cliff date (grant_date + 1 year)
-            actual_cliff_date = grant.grant_date + relativedelta(years=1)
-            # Find the closest SpaceX vest date to that
-            cliff_date = get_closest_vest_date(actual_cliff_date)
-        else:
-            # Standard logic for multi-year vesting (new hire, promotion, etc.)
-            first_vest_date = get_next_vest_date(grant.grant_date)
-            
-            # Add cliff months to first vest date
-            cliff_date = first_vest_date
-            months_to_add = cliff_months
-            while months_to_add >= 6:
-                if cliff_date.month == 6:
-                    cliff_date = date(cliff_date.year, 11, 15)
-                else:
-                    cliff_date = date(cliff_date.year + 1, 6, 15)
-                months_to_add -= 6
+        # Calculate actual cliff date (grant_date + cliff period)
+        actual_cliff_date = grant.grant_date + relativedelta(months=cliff_months)
+        
+        # Find the closest SpaceX vest date to the cliff anniversary
+        cliff_date = get_closest_vest_date(actual_cliff_date)
     
     # Determine vesting frequency
     if grant.share_type in [ShareType.ISO_5Y.value, ShareType.ISO_6Y.value]:
