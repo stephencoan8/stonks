@@ -65,5 +65,16 @@ class Grant(db.Model):
     
     @property
     def total_value_at_grant(self) -> float:
-        """Calculate total value at grant."""
+        """Calculate total value at grant (historical)."""
         return self.share_quantity * self.share_price_at_grant
+    
+    @property
+    def current_share_price(self) -> float:
+        """Get the current (latest) stock price."""
+        from app.utils.init_db import get_latest_stock_price
+        return get_latest_stock_price()
+    
+    @property
+    def current_value(self) -> float:
+        """Calculate current total value based on latest stock price."""
+        return self.share_quantity * self.current_share_price
