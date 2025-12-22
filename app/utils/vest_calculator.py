@@ -193,41 +193,79 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
         total_vests = total_months // 6
         shares_per_vest = grant.share_quantity / total_vests
         
-        # Calculate cliff shares
-        cliff_periods = cliff_months // 6
-        cliff_shares = shares_per_vest * cliff_periods
-        
-        # Special case for 6-year ISO with 2.5 year cliff
-        if grant.share_type == ShareType.ISO_6Y.value and grant.cliff_years == 2.5:
-            cliff_shares = grant.share_quantity * (0.5 / grant.vest_years)
-        
-        # Add cliff event
-        vest_events.append({
-            'vest_date': cliff_date,
-            'shares': cliff_shares,
-            'is_cliff': True
-        })
-        
-        # Add remaining vests
-        current_date = cliff_date
-        remaining_shares = grant.share_quantity - cliff_shares
-        remaining_vests = total_vests - cliff_periods
-        
-        if remaining_vests > 0:
-            shares_per_remaining_vest = remaining_shares / remaining_vests
+        # Special handling for 5-year RSU annual bonus (long_term)
+        # Vests like ISO 5Y but biannually instead of monthly
+        if (grant.grant_type == GrantType.ANNUAL_PERFORMANCE.value and 
+            grant.bonus_type == 'long_term' and 
+            grant.share_type == ShareType.RSU.value and
+            grant.vest_years == 5):
+            # First vest includes first 6 months worth (1 biannual period)
+            # Total is 10 biannual vests over 60 months
+            cliff_shares = shares_per_vest  # 1/10 of total
             
-            for _ in range(remaining_vests):
-                # Move to next vest date
-                if current_date.month == 6:
-                    current_date = date(current_date.year, 11, 15)
-                else:
-                    current_date = date(current_date.year + 1, 6, 15)
+            vest_events.append({
+                'vest_date': cliff_date,
+                'shares': cliff_shares,
+                'is_cliff': True
+            })
+            
+            # Add remaining 9 biannual vests
+            current_date = cliff_date
+            remaining_shares = grant.share_quantity - cliff_shares
+            remaining_vests = total_vests - 1  # Already vested the first period
+            
+            if remaining_vests > 0:
+                shares_per_remaining_vest = remaining_shares / remaining_vests
                 
-                vest_events.append({
-                    'vest_date': current_date,
-                    'shares': shares_per_remaining_vest,
-                    'is_cliff': False
-                })
+                for _ in range(remaining_vests):
+                    # Move to next vest date
+                    if current_date.month == 6:
+                        current_date = date(current_date.year, 11, 15)
+                    else:
+                        current_date = date(current_date.year + 1, 6, 15)
+                    
+                    vest_events.append({
+                        'vest_date': current_date,
+                        'shares': shares_per_remaining_vest,
+                        'is_cliff': False
+                    })
+        else:
+            # Standard RSU vesting (new hire, promotion, short-term bonus, etc.)
+            cliff_months = int(grant.cliff_years * 12)
+            cliff_periods = cliff_months // 6
+            cliff_shares = shares_per_vest * cliff_periods
+            
+            # Special case for 6-year ISO with 2.5 year cliff
+            if grant.share_type == ShareType.ISO_6Y.value and grant.cliff_years == 2.5:
+                cliff_shares = grant.share_quantity * (0.5 / grant.vest_years)
+            
+            # Add cliff event
+            vest_events.append({
+                'vest_date': cliff_date,
+                'shares': cliff_shares,
+                'is_cliff': True
+            })
+            
+            # Add remaining vests
+            current_date = cliff_date
+            remaining_shares = grant.share_quantity - cliff_shares
+            remaining_vests = total_vests - cliff_periods
+            
+            if remaining_vests > 0:
+                shares_per_remaining_vest = remaining_shares / remaining_vests
+                
+                for _ in range(remaining_vests):
+                    # Move to next vest date
+                    if current_date.month == 6:
+                        current_date = date(current_date.year, 11, 15)
+                    else:
+                        current_date = date(current_date.year + 1, 6, 15)
+                    
+                    vest_events.append({
+                        'vest_date': current_date,
+                        'shares': shares_per_remaining_vest,
+                        'is_cliff': False
+                    })
     
     return vest_events
 
@@ -252,7 +290,7 @@ def get_grant_configuration(grant_type: str, share_type: str, bonus_type: str = 
             return (1, 1.0)
         elif bonus_type == 'long_term':
             if share_type == ShareType.RSU.value:
-                return (1, 1.5)  # 1 year + 0.5 year stacked
+                return (5, 1.5)  # 5 years vesting, 1.5 year cliff (like ISO 5Y but biannual)
             elif share_type == ShareType.ISO_5Y.value:
                 return (5, 1.5)
             elif share_type == ShareType.ISO_6Y.value:
