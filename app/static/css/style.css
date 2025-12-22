@@ -497,6 +497,29 @@ body {
     border-bottom: 2px solid var(--border);
 }
 
+/* Sortable table headers */
+.data-table th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s, background 0.2s;
+    position: relative;
+}
+
+.data-table th[data-sort]:hover {
+    color: var(--accent);
+    background: var(--bg-hover);
+}
+
+.data-table th[data-sort] .sort-indicator {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+}
+
+.data-table th[data-order] .sort-indicator {
+    color: var(--accent);
+}
+
 .data-table td {
     padding: 1rem;
     border-bottom: 1px solid var(--border);

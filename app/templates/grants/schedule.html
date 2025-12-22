@@ -10,20 +10,20 @@
 
     {% if vest_events %}
     <div class="table-container">
-        <table class="data-table">
+        <table class="data-table sortable-table">
             <thead>
                 <tr>
-                    <th>Vest Date</th>
-                    <th>Grant Type</th>
-                    <th>Share Type</th>
-                    <th>Shares Vesting</th>
-                    <th>Price at Vest</th>
-                    <th>Gross Value</th>
-                    <th>Payment Method</th>
-                    <th>Tax Withholding</th>
-                    <th>Shares Received</th>
-                    <th>Net Value</th>
-                    <th>Status</th>
+                    <th data-sort="date">Vest Date</th>
+                    <th data-sort="text">Grant Type</th>
+                    <th data-sort="text">Share Type</th>
+                    <th data-sort="number">Shares Vesting</th>
+                    <th data-sort="number">Price at Vest</th>
+                    <th data-sort="number">Gross Value</th>
+                    <th data-sort="text">Payment Method</th>
+                    <th data-sort="number">Tax Withholding</th>
+                    <th data-sort="number">Shares Received</th>
+                    <th data-sort="number">Net Value</th>
+                    <th data-sort="text">Status</th>
                 </tr>
             </thead>
             <tbody>

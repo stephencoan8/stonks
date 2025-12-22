@@ -11,18 +11,18 @@
 
     {% if grants %}
     <div class="table-container">
-        <table class="data-table">
+        <table class="data-table sortable-table">
             <thead>
                 <tr>
-                    <th>Grant Date</th>
-                    <th>Type</th>
-                    <th>Share Type</th>
-                    <th>Quantity</th>
-                    <th>Price at Grant</th>
-                    <th>Value at Grant</th>
-                    <th>Current Price</th>
-                    <th>Current Value*</th>
-                    <th>Vest Period</th>
+                    <th data-sort="date">Grant Date</th>
+                    <th data-sort="text">Type</th>
+                    <th data-sort="text">Share Type</th>
+                    <th data-sort="number">Quantity</th>
+                    <th data-sort="number">Price at Grant</th>
+                    <th data-sort="number">Value at Grant</th>
+                    <th data-sort="number">Current Price</th>
+                    <th data-sort="number">Current Value*</th>
+                    <th data-sort="text">Vest Period</th>
                     <th>Actions</th>
                 </tr>
             </thead>
