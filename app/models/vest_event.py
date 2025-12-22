@@ -19,8 +19,16 @@ class VestEvent(db.Model):
     shares_vested = db.Column(db.Float, nullable=False)
     # Note: share_price_at_vest is now a @property that calculates dynamically
     
-    # Tax handling
-    payment_method = db.Column(db.String(20), default='sell_to_cover')  # 'sell_to_cover' or 'cash_to_cover'
+    # Tax handling - simplified flow:
+    # 1. User enters cash_paid (cash paid towards taxes)
+    # 2. User selects cash_covered_all (did cash cover all taxes?)
+    # 3. If not fully covered, user enters shares_sold (shares sold to cover remainder)
+    cash_paid = db.Column(db.Float, default=0.0)  # Cash paid towards taxes
+    cash_covered_all = db.Column(db.Boolean, default=True)  # Did cash cover all taxes?
+    shares_sold = db.Column(db.Float, default=0.0)  # Shares sold to cover remaining taxes
+    
+    # Legacy fields (kept for backward compatibility)
+    payment_method = db.Column(db.String(20), default='sell_to_cover')
     cash_to_cover = db.Column(db.Float, default=0.0)
     shares_sold_to_cover = db.Column(db.Float, default=0.0)
     
@@ -37,14 +45,6 @@ class VestEvent(db.Model):
     def has_vested(self) -> bool:
         """Check if vest date has passed (based on today's date)."""
         return self.vest_date <= date.today()
-    
-    @property
-    def needs_tax_info(self) -> bool:
-        """Check if vested event is missing tax payment information."""
-        if not self.has_vested:
-            return False
-        # Need info if vested but no cash or shares specified
-        return self.cash_to_cover == 0 and self.shares_sold_to_cover == 0
     
     @property
     def share_price_at_vest(self) -> float:
@@ -78,18 +78,22 @@ class VestEvent(db.Model):
     @property
     def shares_withheld_for_taxes(self) -> float:
         """Calculate total shares withheld/sold for taxes."""
-        share_price = self.share_price_at_vest
-        if self.payment_method == 'cash_to_cover' and self.cash_to_cover > 0 and share_price:
-            # Convert cash paid to equivalent shares
-            return self.cash_to_cover / share_price
-        elif self.payment_method == 'sell_to_cover':
-            return self.shares_sold_to_cover
-        return 0.0
+        # New simplified logic: just return shares_sold directly
+        # (shares_sold is what user enters when cash didn't cover all taxes)
+        return self.shares_sold if self.shares_sold else 0.0
     
     @property
     def shares_received(self) -> float:
         """Calculate actual shares physically received after taxes."""
         return self.shares_vested - self.shares_withheld_for_taxes
+    
+    @property
+    def needs_tax_info(self) -> bool:
+        """Check if vested event is missing tax payment information."""
+        if not self.has_vested:
+            return False
+        # Needs info if vested but no cash paid recorded (for past vests)
+        return self.cash_paid == 0 and self.shares_sold == 0
     
     @property
     def net_value(self) -> float:

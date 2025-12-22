@@ -216,39 +216,26 @@ def update_vest_event(event_id):
         return jsonify({'error': 'Access denied'}), 403
     
     try:
-        payment_method = request.form.get('payment_method', 'sell_to_cover')
-        cash_to_cover = float(request.form.get('cash_to_cover', 0) or 0)
-        shares_sold = float(request.form.get('shares_sold_to_cover', 0) or 0)
+        # New simplified tax fields
+        cash_paid = float(request.form.get('cash_paid', 0) or 0)
+        cash_covered_all = request.form.get('cash_covered_all', 'true').lower() == 'true'
+        shares_sold = float(request.form.get('shares_sold', 0) or 0)
         
-        print(f"DEBUG: Updating vest event {event_id}")
-        print(f"DEBUG: Payment method: {payment_method}")
-        print(f"DEBUG: Cash to cover: {cash_to_cover}")
-        print(f"DEBUG: Shares sold: {shares_sold}")
-        
-        # Update payment method
-        vest_event.payment_method = payment_method
-        
-        # Update amounts based on payment method
-        if payment_method == 'cash_to_cover':
-            vest_event.cash_to_cover = cash_to_cover
-            vest_event.shares_sold_to_cover = 0  # Clear shares sold
-        else:  # sell_to_cover
-            vest_event.shares_sold_to_cover = shares_sold
-            vest_event.cash_to_cover = 0  # Clear cash
+        # Update vest event with new fields
+        vest_event.cash_paid = cash_paid
+        vest_event.cash_covered_all = cash_covered_all
+        vest_event.shares_sold = shares_sold if not cash_covered_all else 0
         
         # Commit to database
         db.session.commit()
-        
-        print(f"DEBUG: Saved - payment_method={vest_event.payment_method}, cash={vest_event.cash_to_cover}, shares_sold={vest_event.shares_sold_to_cover}")
         
         # Return calculated values
         return jsonify({
             'success': True, 
             'message': 'Vest event updated',
-            'payment_method': vest_event.payment_method,
-            'cash_to_cover': vest_event.cash_to_cover,
-            'shares_sold_to_cover': vest_event.shares_sold_to_cover,
-            'shares_withheld': vest_event.shares_withheld_for_taxes,
+            'cash_paid': vest_event.cash_paid,
+            'cash_covered_all': vest_event.cash_covered_all,
+            'shares_sold': vest_event.shares_sold,
             'shares_received': vest_event.shares_received,
             'net_value': vest_event.net_value
         })
