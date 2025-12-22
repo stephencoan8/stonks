@@ -7,6 +7,38 @@ from dateutil.relativedelta import relativedelta
 from typing import List, Dict, Tuple
 from app.models.grant import Grant, GrantType, ShareType
 
+import math
+
+
+def round_vest_schedule(vest_events, total_shares):
+    """Round vest events to whole shares while ensuring total matches grant amount."""
+    if not vest_events:
+        return vest_events
+    target_total = round(total_shares)
+    fractional_parts = []
+    rounded_shares = []
+    for i, vest in enumerate(vest_events):
+        original_shares = vest['shares']
+        rounded = math.floor(original_shares)
+        fractional = original_shares - rounded
+        rounded_shares.append(rounded)
+        fractional_parts.append((i, fractional))
+    current_total = sum(rounded_shares)
+    shares_to_distribute = target_total - current_total
+    fractional_parts.sort(key=lambda x: x[1], reverse=True)
+    for i in range(int(shares_to_distribute)):
+        if i < len(fractional_parts):
+            vest_index = fractional_parts[i][0]
+            rounded_shares[vest_index] += 1
+    rounded_events = []
+    for i, vest in enumerate(vest_events):
+        rounded_event = vest.copy()
+        rounded_event['shares'] = float(rounded_shares[i])
+        rounded_events.append(rounded_event)
+    return rounded_events
+
+
+
 
 def get_next_vest_date(grant_date: date) -> date:
     """
@@ -269,6 +301,7 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
                         'is_cliff': False
                     })
     
+    vest_events = round_vest_schedule(vest_events, grant.share_quantity)
     return vest_events
 
 
