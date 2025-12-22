@@ -32,6 +32,38 @@ def get_next_vest_date(grant_date: date) -> date:
         return date(year + 1, 6, 15)
 
 
+def get_closest_vest_date(target_date: date) -> date:
+    """
+    Find the SpaceX vest date (6/15 or 11/15) closest to the target date.
+    
+    Args:
+        target_date: The date to find the closest vest date to
+        
+    Returns:
+        The closest vest date (6/15 or 11/15)
+    """
+    year = target_date.year
+    
+    # Check the two vest dates in the same year
+    june_15 = date(year, 6, 15)
+    nov_15 = date(year, 11, 15)
+    
+    # Also check previous and next year dates
+    prev_nov_15 = date(year - 1, 11, 15)
+    next_june_15 = date(year + 1, 6, 15)
+    
+    # Calculate distances
+    candidates = [
+        (abs((target_date - prev_nov_15).days), prev_nov_15),
+        (abs((target_date - june_15).days), june_15),
+        (abs((target_date - nov_15).days), nov_15),
+        (abs((target_date - next_june_15).days), next_june_15),
+    ]
+    
+    # Return the date with minimum distance
+    return min(candidates, key=lambda x: x[0])[1]
+
+
 def get_next_espp_date(grant_date: date) -> date:
     """
     Calculate the next ESPP date (either 5/15 or 10/15).
@@ -98,18 +130,28 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
         cliff_date = vesting_start + relativedelta(months=6)
     else:
         # RSU/RSA: Use standard SpaceX vest dates (6/15 or 11/15)
-        first_vest_date = get_next_vest_date(grant.grant_date)
+        # For annual bonuses (1 year cliff), find the closest vest date to the cliff
+        # For longer cliffs, use the standard next vest date logic
         cliff_months = int(grant.cliff_years * 12)
         
-        # Add cliff months to first vest date
-        cliff_date = first_vest_date
-        months_to_add = cliff_months
-        while months_to_add >= 6:
-            if cliff_date.month == 6:
-                cliff_date = date(cliff_date.year, 11, 15)
-            else:
-                cliff_date = date(cliff_date.year + 1, 6, 15)
-            months_to_add -= 6
+        if grant.grant_type == GrantType.ANNUAL_PERFORMANCE.value and grant.cliff_years == 1.0:
+            # Calculate actual cliff date (grant_date + 1 year)
+            actual_cliff_date = grant.grant_date + relativedelta(years=1)
+            # Find the closest SpaceX vest date to that
+            cliff_date = get_closest_vest_date(actual_cliff_date)
+        else:
+            # Standard logic for multi-year vesting (new hire, promotion, etc.)
+            first_vest_date = get_next_vest_date(grant.grant_date)
+            
+            # Add cliff months to first vest date
+            cliff_date = first_vest_date
+            months_to_add = cliff_months
+            while months_to_add >= 6:
+                if cliff_date.month == 6:
+                    cliff_date = date(cliff_date.year, 11, 15)
+                else:
+                    cliff_date = date(cliff_date.year + 1, 6, 15)
+                months_to_add -= 6
     
     # Determine vesting frequency
     if grant.share_type in [ShareType.ISO_5Y.value, ShareType.ISO_6Y.value]:
