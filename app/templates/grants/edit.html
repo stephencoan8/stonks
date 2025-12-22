@@ -38,20 +38,19 @@
                 <select id="share_type" name="share_type" required>
                     <option value="">Select type...</option>
                     <option value="rsu" {% if grant.share_type == 'rsu' %}selected{% endif %}>RSU</option>
-                    <option value="iso_5y" {% if grant.share_type == 'iso_5y' %}selected{% endif %}>ISO (5 Year) - 2x shares</option>
-                    <option value="iso_6y" {% if grant.share_type == 'iso_6y' %}selected{% endif %}>ISO (6 Year) - 3x shares</option>
+                    <option value="iso_5y" {% if grant.share_type == 'iso_5y' %}selected{% endif %}>ISO (5 Year)</option>
+                    <option value="iso_6y" {% if grant.share_type == 'iso_6y' %}selected{% endif %}>ISO (6 Year)</option>
                     <option value="cash" {% if grant.share_type == 'cash' %}selected{% endif %}>Cash</option>
                 </select>
-                <small class="form-help">Note: ISO multipliers will be applied automatically</small>
             </div>
 
             <!-- Share Quantity -->
             <div class="form-group">
-                <label for="share_quantity">Share Quantity (Base)</label>
+                <label for="share_quantity">Share Quantity</label>
                 <input type="number" id="share_quantity" name="share_quantity" 
                        value="{{ grant.share_quantity }}" 
                        step="0.01" min="0" required>
-                <small class="form-help">Enter base quantity (will be multiplied for ISOs)</small>
+                <small class="form-help">Enter the exact number of shares (no auto-multiplication)</small>
             </div>
 
             <!-- Bonus Type (conditional) -->
@@ -81,7 +80,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">💾 Update Grant</button>
+            <button type="submit" class="btn btn-primary" onclick="console.log('Button clicked!'); console.log('Form action:', this.form.action); console.log('Form method:', this.form.method);">💾 Update Grant</button>
             <a href="{{ url_for('grants.view_grant', grant_id=grant.id) }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
