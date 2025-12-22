@@ -38,12 +38,12 @@ def print_vest_schedule(grant_info, vest_events):
 def test_iso_5y_vesting():
     """Test ISO 5Y vesting based on corrected rules."""
     print("\n" + "="*80)
-    print("TEST 1: ISO 5Y (2x multiplier)")
+    print("TEST 1: ISO 5Y")
     print("="*80)
     print("Expected: Grant 1/1/23, vesting starts 1/1/24")
-    print("          Cliff at 7/1/24 (1.5 years) with 6 months worth = 10 shares")
-    print("          Monthly vesting until 12/1/29 (60 months total)")
-    print("          Total: 1 cliff + 54 monthly = 55 vest events")
+    print("          Cliff at 7/1/24 (1.5 years) with 6 months worth = 6/48 shares")
+    print("          Monthly vesting until 12/1/27 (48 months total)")
+    print("          Total: 1 cliff + 42 monthly = 43 vest events")
     
     grant = Grant(
         grant_date=date(2023, 1, 1),
@@ -70,19 +70,19 @@ def test_iso_5y_vesting():
     
     # Verify first vest
     first_vest = vest_schedule[0]
-    expected_first_shares = 100 * (6/60)  # 6 months out of 60 months = 10 shares
+    expected_first_shares = 100 * (6/48)  # 6 months out of 48 months = 12.5 shares
     expected_cliff_date = date(2024, 7, 1)
     print(f"\nFirst vest verification:")
     print(f"  Expected date: {expected_cliff_date}")
     print(f"  Actual date: {first_vest['vest_date']}")
     print(f"  {'✅ PASS' if first_vest['vest_date'] == expected_cliff_date else '❌ FAIL'}")
-    print(f"  Expected shares: {expected_first_shares:.2f} shares (6/60 = 10%)")
+    print(f"  Expected shares: {expected_first_shares:.2f} shares (6/48 = 12.5%)")
     print(f"  Actual shares: {first_vest['shares']:.2f} shares")
     print(f"  {'✅ PASS' if abs(first_vest['shares'] - expected_first_shares) < 0.01 else '❌ FAIL'}")
     
     # Verify last vest
     last_vest = vest_schedule[-1]
-    expected_last_date = date(2029, 12, 1)
+    expected_last_date = date(2027, 12, 1)
     print(f"\nLast vest verification:")
     print(f"  Expected date: {expected_last_date}")
     print(f"  Actual date: {last_vest['vest_date']}")
@@ -90,20 +90,20 @@ def test_iso_5y_vesting():
     
     # Verify total number of events
     print(f"\nTotal events verification:")
-    print(f"  Expected: 55 events (1 cliff + 54 monthly)")
+    print(f"  Expected: 43 events (1 cliff + 42 monthly)")
     print(f"  Actual: {len(vest_schedule)} events")
-    print(f"  {'✅ PASS' if len(vest_schedule) == 55 else '❌ FAIL'}")
+    print(f"  {'✅ PASS' if len(vest_schedule) == 43 else '❌ FAIL'}")
 
 
 def test_iso_6y_vesting():
     """Test ISO 6Y vesting based on corrected rules."""
     print("\n" + "="*80)
-    print("TEST 2: ISO 6Y (3x multiplier)")
+    print("TEST 2: ISO 6Y")
     print("="*80)
     print("Expected: Grant 1/1/23, vesting starts 1/1/25")
-    print("          Cliff at 7/1/25 (2.5 years) with 6 months worth = 10 shares")
-    print("          Monthly vesting until 12/1/29 (60 months total from vesting start)")
-    print("          Total: 1 cliff + 54 monthly = 55 vest events")
+    print("          Cliff at 7/1/25 (2.5 years) with 6 months worth = 6/48 shares")
+    print("          Monthly vesting until 12/1/28 (48 months total from vesting start)")
+    print("          Total: 1 cliff + 42 monthly = 43 vest events")
     
     grant = Grant(
         grant_date=date(2023, 1, 1),
@@ -130,19 +130,19 @@ def test_iso_6y_vesting():
     
     # Verify first vest
     first_vest = vest_schedule[0]
-    expected_first_shares = 100 * (6/60)  # 6 months out of 60 months = 10 shares
+    expected_first_shares = 100 * (6/48)  # 6 months out of 48 months = 12.5 shares
     expected_cliff_date = date(2025, 7, 1)
     print(f"\nFirst vest verification:")
     print(f"  Expected date: {expected_cliff_date}")
     print(f"  Actual date: {first_vest['vest_date']}")
     print(f"  {'✅ PASS' if first_vest['vest_date'] == expected_cliff_date else '❌ FAIL'}")
-    print(f"  Expected shares: {expected_first_shares:.2f} shares (6/60 = 10%)")
+    print(f"  Expected shares: {expected_first_shares:.2f} shares (6/48 = 12.5%)")
     print(f"  Actual shares: {first_vest['shares']:.2f} shares")
     print(f"  {'✅ PASS' if abs(first_vest['shares'] - expected_first_shares) < 0.01 else '❌ FAIL'}")
     
     # Verify last vest
     last_vest = vest_schedule[-1]
-    expected_last_date = date(2029, 12, 1)  # You said last vest is 12/1/29
+    expected_last_date = date(2028, 12, 1)  # 48 months from 1/1/25 = 12/1/28
     print(f"\nLast vest verification:")
     print(f"  Expected date: {expected_last_date}")
     print(f"  Actual date: {last_vest['vest_date']}")
@@ -150,9 +150,9 @@ def test_iso_6y_vesting():
     
     # Verify total number of events
     print(f"\nTotal events verification:")
-    print(f"  Expected: 55 events (1 cliff + 54 monthly)")
+    print(f"  Expected: 43 events (1 cliff + 42 monthly)")
     print(f"  Actual: {len(vest_schedule)} events")
-    print(f"  {'✅ PASS' if len(vest_schedule) == 55 else '❌ FAIL'}")
+    print(f"  {'✅ PASS' if len(vest_schedule) == 43 else '❌ FAIL'}")
 
 
 def test_rsu_vesting():

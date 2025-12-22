@@ -153,18 +153,20 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
     if vest_frequency_months == 1:
         # Monthly vesting (for ISOs) - TRUE monthly vesting, 12 events per year
         # ISO vesting rules:
-        # - Both ISO 5Y and 6Y vest over 5 years (60 months) from vesting start
-        # - ISO 5Y: Vesting starts 1 year after grant (1/1/24 for grant 1/1/23)
-        # - ISO 6Y: Vesting starts 2 years after grant (1/1/25 for grant 1/1/23)
-        # - Cliff at 6 months into vesting period
-        # - First vest at cliff includes 6 months worth (6/60 of total)
-        # - Then monthly vesting on the 1st of each month for remaining 54 months (1/60 each)
-        # Example: Grant 1/1/23, ISO 6Y, vesting 1/1/25-12/1/29 = 60 months
+        # - ISO 5Y: Vests over 4 years (48 months) starting 1 year after grant
+        #   - Grant 1/1/23 → Vesting 1/1/24 to 12/1/27 = 48 months
+        # - ISO 6Y: Vests over 4 years (48 months) starting 2 years after grant  
+        #   - Grant 1/1/23 → Vesting 1/1/25 to 12/1/28 = 48 months
+        # - Cliff at 6 months into vesting period (6/48 of total shares)
+        # - First vest at cliff includes 6 months worth (6/48)
+        # - Then monthly vesting on the 1st of each month for remaining 42 months (1/48 each)
         
-        VESTING_MONTHS = 60  # Both ISO 5Y and 6Y vest over 5 years
+        # Both ISO types vest over 4 years (48 months)
+        VESTING_MONTHS = 48
+        
         shares_per_month = grant.share_quantity / VESTING_MONTHS
         
-        # First vest at cliff includes 6 months worth (6/60 of total)
+        # First vest at cliff includes 6 months worth
         cliff_shares = shares_per_month * 6
         
         # Add cliff event
@@ -174,11 +176,11 @@ def calculate_vest_schedule(grant: Grant) -> List[Dict]:
             'is_cliff': True
         })
         
-        # Add monthly vests - 54 more months (months 7-60)
-        # Cliff vested months 1-6, we need to vest months 7-60 = 54 more vests
+        # Add monthly vests - remaining months after cliff (months 7 to VESTING_MONTHS)
+        remaining_months = VESTING_MONTHS - 6
         current_date = cliff_date
         
-        for _ in range(54):  # 54 more vests after cliff (months 7-60)
+        for _ in range(remaining_months):
             # Move to next month
             current_date = current_date + relativedelta(months=1)
             
