@@ -9,6 +9,7 @@
         <div style="display: flex; gap: 1rem;">
             <a href="{{ url_for('grants.edit_grant', grant_id=grant.id) }}" class="btn btn-primary">✏️ Edit Grant</a>
             <a href="{{ url_for('grants.list_grants') }}" class="btn btn-secondary">← Back</a>
+            <form method="POST" action="{{ url_for('grants.delete_grant', grant_id=grant.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this grant and all its vesting events?');"><button type="submit" class="btn btn-danger">🗑️ Delete Grant</button></form>
         </div>
     </header>
 
