@@ -1,55 +1,58 @@
 # 🚀 SpaceX Stonks - Stock Compensation Tracker
 
-A comprehensive web application for tracking SpaceX stock compensation packages, including RSUs, ISOs, ESPP, and various grant types with automatic vesting schedule calculations.
+A comprehensive web application for tracking SpaceX stock compensation packages, including RSUs, ISOs, ESPP, and various grant types with automatic vesting schedule calculations and tax management.
 
-## Features
+## ✨ Features
 
-✨ **Complete Grant Management**
+### Grant Management
 - Track New Hire, Annual Performance, Promotion, Kickass, ESPP, and nqESPP grants
 - Support for RSU, ISO (5-year/6-year), and Cash compensation
-- Automatic vesting schedule calculation with cliff periods
+- Automatic vesting schedule calculation with smart cliff periods
 - Semi-annual and monthly vesting support
+- Edit grants and auto-recalculate vest schedules
 
-📊 **Dashboard & Analytics**
-- Real-time portfolio valuation
+### Dashboard & Analytics
+- Real-time portfolio valuation with ISO spread calculation
+- Interactive vesting timeline with historical price points
+- Stock price history charts and mini-charts
 - Upcoming vest notifications
-- Complete vesting schedule timeline
-- Stock price history with charts
+- Complete vesting schedule view with sortable columns
 
-💼 **Tax Management**
-- Track cash-to-cover vs shares-sold-to-cover
+### Tax Management
+- Track cash-to-cover vs shares-sold-to-cover for each vest
+- Record "Cash Paid", "Shares Sold", and auto-calculate "Shares Received"
 - Calculate vest values at different stock prices
-- Historical tracking of vested shares
+- Historical tracking of net shares received
 
-🔐 **Security & Access**
+### Security & Access
 - User authentication with password encryption
 - Admin panel for stock price management
 - User data isolation and privacy
-- Password reset functionality
+- Admin user management
 
-🎨 **Modern UI**
-- Dark theme with vibrant accent colors
+### Modern UI
+- Dark theme with vibrant accent colors (Robinhood-inspired)
 - Responsive design for all devices
-- Chart.js integration for visualizations
-- Robinhood-inspired interface
+- Chart.js visualizations with zoom controls
+- Sortable tables with click-to-sort columns
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Python 3.8 or higher
+- Python 3.8+
 
 ### Installation
 
-1. **Clone and navigate to the project:**
+1. **Clone the repository:**
    ```bash
+   git clone https://github.com/YOUR_USERNAME/stonks.git
    cd stonks
    ```
 
-2. **Create and activate virtual environment:**
+2. **Create virtual environment:**
    ```bash
    python3 -m venv .venv
-   source .venv/bin/activate
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
    ```
 
 3. **Install dependencies:**
@@ -59,181 +62,166 @@ A comprehensive web application for tracking SpaceX stock compensation packages,
 
 4. **Set up environment variables:**
    ```bash
-   chmod +x setup_env.sh
-   ./setup_env.sh
+   cp .env.example .env
+   # Edit .env and set your SECRET_KEY
    ```
-   
-   Or manually create `.env` file from `.env.example` and update values.
 
-### Running the Application
+5. **Run the application:**
+   ```bash
+   python main.py
+   ```
 
-**Development mode:**
-```bash
-python main.py
-```
+6. **Access the app:**
+   - Navigate to `http://127.0.0.1:5001`
+   - Default admin login: `admin` / `admin` (change immediately!)
 
-The application will start at `http://127.0.0.1:5000`
+## 📖 User Guide
 
-**Default admin credentials:**
-- Username: `admin`
-- Password: `admin`
+## 📖 User Guide
 
-**Production mode:**
-```bash
-gunicorn -w 4 -b 0.0.0.0:8000 main:app
-```
+### Adding Your First Grant
+1. Register/login to your account
+2. Click "Add Grant" on the dashboard
+3. Enter grant details (date, type, shares)
+4. View automatically calculated vesting schedule
 
-## Usage Guide
+### Managing Vests
+- Click "My Grants" to see all grants
+- Click any grant to view details and vesting schedule
+- For each vest event, record tax withholding:
+  - Enter "Cash Paid" if you paid cash for taxes
+  - Select "Fully Covered?" if all taxes were covered
+  - Enter "Shares Sold" if shares were sold for taxes
+  - "Shares Received" auto-calculates
 
-### For Employees
+### Admins Only
+- Manage stock prices via Admin → Stock Prices
+- Add new valuations as SpaceX shares are revalued
+- View all users via Admin → Users
 
-1. **Register an account** - Create your user account
-2. **Add grants** - Input your stock grants with:
-   - Grant date
-   - Grant type (New Hire, Bonus, etc.)
-   - Share type (RSU, ISO, Cash)
-   - Share quantity
-3. **View dashboard** - See your total value and upcoming vests
-4. **Track vesting** - Monitor your complete vesting schedule
-5. **Manage taxes** - Record cash-to-cover or shares-sold decisions
+## 🏗️ Grant Types Reference
 
-### For Admins
+| Grant Type | Vest Period | Cliff | Frequency |
+|------------|-------------|-------|-----------|
+| New Hire (RSU) | 5 years | 1 year | Semi-annual (6/15, 11/15) |
+| Annual Bonus - Short (RSU/Cash) | 1 year | 1 year | One-time |
+| Annual Bonus - Long (RSU) | 4 years | 1.5 years | Semi-annual |
+| Annual Bonus - Long (ISO 5Y) | 4 years | 1.5 years | Monthly |
+| Annual Bonus - Long (ISO 6Y) | 4 years | 2.5 years | Monthly |
+| Promotion (RSU) | 5 years | 1 year | Semi-annual |
+| Kickass (RSU) | 1-5 years | 1 year | Semi-annual |
+| ESPP | Immediate | None | Specific dates |
 
-1. **Login with admin credentials**
-2. **Manage stock prices:**
-   - Add new valuations
-   - View price history chart
-   - Update pricing as needed
-3. **View users** - Monitor registered users
+**Note:** ISOs use spread value (current price - strike price) for valuation.
 
-## Grant Types Explained
-
-### New Hire Grant
-- **Structure:** 5-year vest with 1-year cliff
-- **Frequency:** Semi-annual (June 15 & November 15)
-- **Type:** RSUs
-
-### Annual Performance (Bonus)
-- **Short Term:** 1-year cliff, paid all at once (RSU or Cash)
-- **Long Term:** Options include:
-  - RSU: Semi-annual with 1.5-year total cliff
-  - ISO 5-Year: 2x shares, monthly vest, 1.5-year cliff
-  - ISO 6-Year: 3x shares, monthly vest, 2.5-year cliff (0.5 initial)
-
-### Promotion
-- Same structure as New Hire grant
-
-### Kickass Bonus
-- **Structure:** 1-5 years (configurable)
-- **Frequency:** Semi-annual
-- **Cliff:** 1 year
-
-### ESPP / nqESPP
-- **Frequency:** Immediate (May 15 or October 15)
-- **ESPP:** 15% discount
-- **nqESPP:** No discount
-
-## Project Structure
+## 🏛️ Project Structure
 
 ```
 stonks/
 ├── app/
-│   ├── models/              # Database models
-│   │   ├── user.py         # User authentication
-│   │   ├── grant.py        # Stock grants
-│   │   ├── vest_event.py   # Vesting events
-│   │   └── stock_price.py  # Stock valuations
-│   ├── routes/             # Application routes
-│   │   ├── auth.py         # Authentication
-│   │   ├── main.py         # Dashboard
-│   │   ├── grants.py       # Grant management
-│   │   └── admin.py        # Admin panel
-│   ├── templates/          # HTML templates
-│   ├── static/             # CSS, JS, images
-│   ├── utils/              # Helper functions
-│   │   ├── vest_calculator.py  # Vesting logic
-│   │   └── init_db.py      # Database initialization
-│   └── __init__.py         # App factory
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variables template
+│   ├── models/              # Database models (User, Grant, VestEvent, StockPrice)
+│   ├── routes/              # Flask blueprints (auth, main, grants, admin)
+│   ├── templates/           # Jinja2 HTML templates
+│   ├── static/              # CSS, JavaScript, assets
+│   │   ├── css/style.css
+│   │   └── js/sortable-tables.js
+│   └── utils/               # Helpers (vest calculator, DB init)
+├── instance/                # SQLite database (gitignored)
+├── main.py                  # Application entry point
+├── requirements.txt         # Python dependencies
+├── Procfile                 # Heroku deployment
+├── Dockerfile               # Container deployment
 └── README.md
-
 ```
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- **Backend:** Flask, SQLAlchemy, Flask-Login
-- **Database:** SQLite (development), PostgreSQL-ready
+- **Backend:** Flask 3.0, SQLAlchemy, Flask-Login
+- **Database:** SQLite (dev), PostgreSQL-ready
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Charts:** Chart.js
-- **Security:** Werkzeug password hashing, CSRF protection
+- **Charts:** Chart.js 4.4 with date adapters
+- **Security:** Werkzeug password hashing
 
-## Development
-
-**Run tests:**
-```bash
-pytest
-```
-
-**Code formatting:**
-```bash
-black app/
-flake8 app/
-```
-
-## Deployment
+## 🚀 Deployment
 
 ### Heroku
-
 ```bash
-# Create Procfile
-echo "web: gunicorn main:app" > Procfile
-
-# Deploy
 heroku create your-app-name
-heroku config:set SECRET_KEY=your-secret-key-here
+heroku config:set SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
 heroku addons:create heroku-postgresql:mini
 git push heroku main
 ```
 
 ### Docker
-
 ```bash
-# Build image
 docker build -t spacex-stonks .
-
-# Run container
-docker run -p 5000:5000 -e SECRET_KEY=your-key spacex-stonks
+docker run -p 5001:5001 \
+  -e SECRET_KEY=your-secret-key \
+  -e DATABASE_URL=postgresql://... \
+  spacex-stonks
 ```
 
-## Security Notes
+### GitHub Setup
+1. Create a new private repository on GitHub
+2. Add remote and push:
+   ```bash
+   git remote add origin git@github.com:YOUR_USERNAME/stonks.git
+   git branch -M main
+   git push -u origin main
+   ```
+3. Configure repository settings:
+   - Enable Dependabot security alerts
+   - Keep repository private (contains financial tracking)
+   - Never commit the `instance/` directory
 
-- Change the default admin password immediately in production
-- Use a strong SECRET_KEY in production
-- Enable HTTPS in production
-- Configure proper email settings for password reset
-- Consider using PostgreSQL instead of SQLite for production
-- Implement rate limiting for authentication endpoints
+## 🔒 Security Notes
 
-## Contributing
+⚠️ **Production Checklist:**
+- [ ] Change default admin password immediately
+- [ ] Generate strong SECRET_KEY: `python -c 'import secrets; print(secrets.token_hex(32))'`
+- [ ] Enable HTTPS/SSL
+- [ ] Use PostgreSQL instead of SQLite
+- [ ] Set up proper email for password resets
+- [ ] Never commit `.env` or `instance/*.db` files
+- [ ] Enable Dependabot and security scanning on GitHub
 
-This project was built based on detailed SpaceX stock compensation requirements. To contribute:
+## 📝 Development
+
+**Code quality:**
+```bash
+# Format code
+black app/
+
+# Lint
+flake8 app/
+
+# Type check
+mypy app/
+```
+
+**Database migrations:**
+```bash
+# If adding new fields, use app/utils/migrate_db.py
+# Or for new setups, delete instance/stonks.db and restart
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
-Private project - All rights reserved
+Private - All Rights Reserved
 
-## Support
+## 💡 Acknowledgments
 
-For questions or issues, please contact the repository owner.
+Built for SpaceX employees to better track and understand their stock compensation packages.
 
 ---
 
-**Built with ❤️ for SpaceX employees to better understand their stock compensation**
+**Status:** Production Ready ✅  
+**Last Updated:** December 2025

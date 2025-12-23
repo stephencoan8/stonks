@@ -86,8 +86,11 @@
             <canvas id="vestingChart"></canvas>
         </div>
         <div class="chart-legend">
-            <span class="legend-item"><span class="legend-line solid"></span> Vested (Past)</span>
-            <span class="legend-item"><span class="legend-line dashed"></span> Unvested (Future)</span>
+            <span class="legend-item"><span class="legend-line solid"></span> Past (Already Vested)</span>
+            <span class="legend-item"><span class="legend-line dashed"></span> Future (Projected)</span>
+            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                Shows total equity value at each date (both lines show cumulative total, split at today's date)
+            </div>
         </div>
     </div>
 
@@ -161,14 +164,13 @@ function createChart(view) {
     // Parse dates to Date objects for proper time scale
     const dates = vestingData.map(d => new Date(d.date));
     // Use pre-calculated values from backend (already includes historical prices)
-    const vestedData = vestingData.map(d => view === 'value' ? d.vested_value : d.vested_shares);
     const totalData = vestingData.map(d => view === 'value' ? d.total_value : d.total_shares);
     
-    // Split data into vested and unvested portions
+    // Split data into past (vested) and future (unvested) portions for styling
     const vestedDates = dates.slice(0, transitionIndex >= 0 ? transitionIndex : dates.length);
     const unvestedDates = transitionIndex >= 0 ? dates.slice(transitionIndex - 1) : [];
     
-    const vestedValues = vestedData.slice(0, transitionIndex >= 0 ? transitionIndex : vestedData.length);
+    const vestedValues = totalData.slice(0, transitionIndex >= 0 ? transitionIndex : totalData.length);
     const unvestedValues = transitionIndex >= 0 ? totalData.slice(transitionIndex - 1) : [];
     
     if (chartInstance) {
@@ -181,7 +183,7 @@ function createChart(view) {
             labels: dates,
             datasets: [
                 {
-                    label: 'Vested',
+                    label: 'Vested (Past)',
                     data: vestedDates.map((date, idx) => ({x: date, y: vestedValues[idx]})),
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -192,7 +194,7 @@ function createChart(view) {
                     pointHoverRadius: 6
                 },
                 {
-                    label: 'Unvested (Projected)',
+                    label: 'Unvested (Future)',
                     data: unvestedDates.map((date, idx) => ({x: date, y: unvestedValues[idx]})),
                     borderColor: '#9ca3af',
                     backgroundColor: 'rgba(156, 163, 175, 0.05)',

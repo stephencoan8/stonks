@@ -9,7 +9,6 @@ from app.models.vest_event import VestEvent
 from app.models.stock_price import StockPrice
 from app.utils.init_db import get_latest_stock_price
 from datetime import date
-from sqlalchemy import func
 
 main_bp = Blueprint('main', __name__)
 
@@ -54,35 +53,103 @@ def dashboard():
     vested_value_gross = vested_shares_gross * current_price
     vested_value_net = vested_shares_net * current_price
     
-    # Prepare vesting timeline data for chart
+    # Build comprehensive timeline with ALL state changes (stock price updates + vest events)
+    all_stock_prices = StockPrice.query.order_by(StockPrice.valuation_date).all()
+    
+    # Create a timeline of all significant dates (vest events + price changes)
+    timeline_events = []
+    
+    # Add all vest events
+    for vest in all_vest_events:
+        timeline_events.append({
+            'date': vest.vest_date,
+            'type': 'vest',
+            'vest': vest
+        })
+    
+    # Add all stock price updates
+    for price in all_stock_prices:
+        timeline_events.append({
+            'date': price.valuation_date,
+            'type': 'price_update',
+            'price': price.price_per_share
+        })
+    
+    # Sort all events by date
+    timeline_events.sort(key=lambda x: x['date'])
+    
+    # Pre-build a dict for O(1) price lookups
+    price_dict = {p.valuation_date: p.price_per_share for p in all_stock_prices}
+    
+    # Calculate cumulative values efficiently with O(n) complexity
     vesting_timeline = []
-    cumulative_vested_shares = 0
-    cumulative_total_shares = 0
     cumulative_vested_value = 0
     cumulative_total_value = 0
+    cumulative_vested_shares = 0
+    cumulative_total_shares = 0
+    current_price = 0
     
-    for vest in all_vest_events:
-        shares = vest.shares_received  # Use net shares received
-        # Use the value at vest date (historical price), not current price
-        value = vest.net_value  # This uses price_at_vest (historical)
+    for event in timeline_events:
+        event_date = event['date']
         
-        cumulative_total_shares += shares
-        cumulative_total_value += value
+        # Update price if this is a price update
+        if event['type'] == 'price_update':
+            # Recalculate all cumulative values with new price
+            # This is necessary because ISOs use spread (price - strike)
+            current_price = event['price']
+            
+            # Recalculate from scratch when price changes
+            cumulative_vested_value = 0
+            cumulative_total_value = 0
+            
+            for vest in all_vest_events:
+                if vest.vest_date <= event_date:
+                    grant = vest.grant
+                    shares = vest.shares_vested
+                    
+                    if grant.share_type in ['iso_5y', 'iso_6y']:
+                        value = shares * (current_price - grant.share_price_at_grant)
+                    else:
+                        value = shares * current_price
+                    
+                    cumulative_total_value += value
+                    if vest.has_vested:
+                        cumulative_vested_value += value
         
-        if vest.has_vested:
-            cumulative_vested_shares += shares
-            cumulative_vested_value += value
+        # Process vest event
+        elif event['type'] == 'vest':
+            vest = event['vest']
+            grant = vest.grant
+            shares = vest.shares_vested
+            
+            # Use most recent price
+            if not current_price:
+                continue
+            
+            if grant.share_type in ['iso_5y', 'iso_6y']:
+                value = shares * (current_price - grant.share_price_at_grant)
+            else:
+                value = shares * current_price
+            
+            cumulative_total_value += value
+            cumulative_total_shares += shares
+            
+            if vest.has_vested:
+                cumulative_vested_value += value
+                cumulative_vested_shares += shares
         
-        vesting_timeline.append({
-            'date': vest.vest_date.strftime('%Y-%m-%d'),
-            'vested_shares': cumulative_vested_shares,
-            'total_shares': cumulative_total_shares,
-            'vested_value': cumulative_vested_value,
-            'total_value': cumulative_total_value,
-            'is_vested': vest.has_vested,
-            'shares': shares,
-            'value': value
-        })
+        # Only add timeline point if we have data
+        if current_price > 0 and cumulative_total_shares > 0:
+            vesting_timeline.append({
+                'date': event_date.strftime('%Y-%m-%d'),
+                'vested_shares': cumulative_vested_shares,
+                'total_shares': cumulative_total_shares,
+                'vested_value': cumulative_vested_value,
+                'total_value': cumulative_total_value,
+                'is_vested': event_date <= date.today(),
+                'price_at_date': current_price,
+                'event_type': event['type']
+            })
     
     return render_template('main/dashboard.html',
                          total_grants=total_grants,
