@@ -256,26 +256,63 @@ def finance_deep_dive():
         Grant.user_id == current_user.id
     ).order_by(VestEvent.vest_date).all()
     
+    # Get latest stock price for current value estimation
+    latest_stock_price = get_latest_stock_price() or 0.0
+    
     # Prepare data for analysis
     analysis_data = []
+    total_shares_held = 0.0
+    total_cost_basis = 0.0
+    total_current_value = 0.0
     
     for grant in grants:
         vest_events = [ve for ve in all_vest_events if ve.grant_id == grant.id]
-        total_shares_vested = sum(ve.shares_vested for ve in vest_events if ve.has_vested)
+        
+        # Calculate shares still held (shares vested - shares sold)
+        total_shares_vested = sum(ve.shares_vested for ve in vest_events)
+        total_shares_sold = sum(ve.shares_sold for ve in vest_events)
+        shares_held = total_shares_vested - total_shares_sold
+        
+        # Calculate cost basis (what you paid for the shares you still hold)
+        # For ISOs: strike price * shares held
+        # For RSUs/ESPP: FMV at vest * shares held (already taxed at vest)
+        if grant.grant_type == 'iso':
+            cost_basis = grant.share_price_at_grant * shares_held
+        else:
+            # For RSUs/ESPP, cost basis is the FMV at vest (weighted average)
+            if shares_held > 0:
+                total_vest_value = sum(ve.value_at_vest for ve in vest_events if ve.vest_date <= date.today())
+                cost_basis = (total_vest_value / total_shares_vested) * shares_held if total_shares_vested > 0 else 0
+            else:
+                cost_basis = 0
+        
+        # Calculate current value of held shares
+        current_value = shares_held * latest_stock_price
+        
+        # Calculate unrealized gain
+        unrealized_gain = current_value - cost_basis
         
         analysis_data.append({
             'grant': grant,
             'vest_events': vest_events,
             'total_shares_vested': total_shares_vested,
-            'grant_gain_loss': 0,
-            'grant_tax': 0
+            'shares_held': shares_held,
+            'cost_basis': cost_basis,
+            'current_value': current_value,
+            'unrealized_gain': unrealized_gain
         })
+        
+        total_shares_held += shares_held
+        total_cost_basis += cost_basis
+        total_current_value += current_value
     
-    latest_stock_price = get_latest_stock_price() or 0.0
+    total_unrealized_gain = total_current_value - total_cost_basis
     
     return render_template('grants/finance_deep_dive.html',
                          analysis_data=analysis_data,
-                         total_gain_loss=0,
-                         total_tax=0,
+                         total_shares_held=total_shares_held,
+                         total_cost_basis=total_cost_basis,
+                         total_current_value=total_current_value,
+                         total_unrealized_gain=total_unrealized_gain,
                          latest_stock_price=latest_stock_price,
                          current_date=date.today())
