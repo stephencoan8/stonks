@@ -22,7 +22,6 @@
                     <th data-sort="number">Value at Grant**</th>
                     <th data-sort="number">Current Price</th>
                     <th data-sort="number">Current Value*</th>
-                    <th data-sort="text">Vest Period</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -37,7 +36,6 @@
                     <td>${{ "{:,.2f}".format(grant.total_value_at_grant) }}</td>
                     <td class="highlight">${{ "{:,.2f}".format(grant.current_share_price) }}</td>
                     <td class="highlight">${{ "{:,.2f}".format(grant.current_value) }}</td>
-                    <td>{{ grant.vest_years }}y / {{ grant.cliff_years }}y cliff</td>
                     <td class="actions">
                         <a href="{{ url_for('grants.view_grant', grant_id=grant.id) }}" class="btn btn-sm">View</a>
                         <a href="{{ url_for('grants.edit_grant', grant_id=grant.id) }}" class="btn btn-sm btn-secondary">Edit</a>
