@@ -9,6 +9,26 @@
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">← Back</a>
     </header>
 
+    {% if prices %}
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-label">Current Stock Price</div>
+            <div class="stat-value" style="font-size: 2.5rem; color: var(--accent-color);">${{ "{:,.2f}".format(prices[0].price_per_share) }}</div>
+            <div class="stat-meta">As of {{ prices[0].valuation_date.strftime('%B %d, %Y') }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Price History</div>
+            <div class="stat-value">{{ prices|length }}</div>
+            <div class="stat-meta">Total valuations recorded</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Latest Update</div>
+            <div class="stat-value" style="font-size: 1.5rem;">{{ prices[0].created_at.strftime('%b %d') }}</div>
+            <div class="stat-meta">{{ prices[0].created_at.strftime('%I:%M %p') }}</div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="form-card">
         <h2>Add New Stock Price</h2>
         <form method="POST" action="{{ url_for('admin.add_stock_price') }}" class="inline-form">
@@ -84,24 +104,52 @@ fetch('{{ url_for("admin.stock_price_chart_data") }}')
                     data: data.prices,
                     borderColor: '#00d4ff',
                     backgroundColor: 'rgba(0, 212, 255, 0.1)',
-                    tension: 0.1,
-                    fill: true
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#00d4ff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
                 plugins: {
                     legend: { display: false },
-                    title: { display: false }
+                    title: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleColor: '#00d4ff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(context) {
+                                return 'Price: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: false,
-                        ticks: { color: '#999' },
+                        ticks: { 
+                            color: '#999',
+                            callback: function(value) {
+                                return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            }
+                        },
                         grid: { color: '#333' }
                     },
                     x: {
-                        ticks: { color: '#999' },
+                        ticks: { 
+                            color: '#999',
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
                         grid: { color: '#333' }
                     }
                 }
