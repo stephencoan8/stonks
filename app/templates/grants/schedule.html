@@ -28,7 +28,7 @@
             </thead>
             <tbody>
                 {% for vest in vest_events %}
-                <tr class="{% if vest.is_vested %}vested-row{% endif %}">
+                <tr class="{% if vest.is_vested %}vested-row{% endif %} clickable-row" onclick="window.location.href='{{ url_for('grants.view_grant', grant_id=vest.grant.id) }}';" style="cursor: pointer;" title="Click to view grant details">
                     <td>{{ vest.vest_date.strftime('%Y-%m-%d') }}</td>
                     <td><span class="badge badge-{{ vest.grant.grant_type }}">{{ vest.grant.grant_type.replace('_', ' ').title() }}</span></td>
                     <td><span class="badge badge-share">{{ vest.grant.share_type.upper() }}</span></td>
@@ -70,4 +70,23 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+.clickable-row {
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.clickable-row:hover {
+    background-color: rgba(79, 70, 229, 0.08) !important;
+    transform: scale(1.002);
+}
+
+.clickable-row:active {
+    transform: scale(0.998);
+}
+
+.vested-row.clickable-row:hover {
+    background-color: rgba(79, 70, 229, 0.12) !important;
+}
+</style>
 {% endblock %}
