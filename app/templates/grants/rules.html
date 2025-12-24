@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Grant Rules & Logic - SpaceX Stonks{% endblock %}
+
+{% block content %}
+<div class="rules-page">
+    <header class="page-header">
+        <h1>📋 Grant Rules & Calculation Logic</h1>
+        <p class="subtitle">Understanding how your equity compensation is calculated</p>
+    </header>
+
+    <!-- Vesting Schedules -->
+    <section class="rules-section">
+        <h2>🗓️ Vesting Schedules</h2>
+        
+        <div class="rule-card highlight">
+            <h3>RSUs (Restricted Stock Units)</h3>
+            <p><strong>Vesting Frequency: BIANNUAL (Twice per year)</strong></p>
+            <ul>
+                <li><strong>Total Duration:</strong> Varies by grant type (typically 5-6 years)</li>
+                <li><strong>Vesting Events:</strong> Every 6 months on specific dates</li>
+                <li><strong>Typical Dates:</strong> May 1 and November 1 (or similar biannual schedule)</li>
+                <li><strong>Cliff:</strong> 1 year - nothing vests until first vesting date after 12 months</li>
+            </ul>
+            <div class="example">
+                <strong>Example:</strong> 1,000 RSU grant on May 1, 2024 (5-year schedule)
+                <ul>
+                    <li><strong>May 1, 2025:</strong> 200 shares (20% - first cliff vest)</li>
+                    <li><strong>Nov 1, 2025:</strong> 100 shares (10%)</li>
+                    <li><strong>May 1, 2026:</strong> 100 shares (10%)</li>
+                    <li><strong>Nov 1, 2026:</strong> 100 shares (10%)</li>
+                    <li>...continues every 6 months through May 1, 2029</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-card highlight">
+            <h3>ISOs (Incentive Stock Options)</h3>
+            <p><strong>Vesting Frequency: MONTHLY</strong></p>
+            <p><strong>Duration and Cliff vary by grant vintage:</strong></p>
+            
+            <h4>5-Year ISO Grants</h4>
+            <ul>
+                <li><strong>Total Duration:</strong> 5 years (60 months)</li>
+                <li><strong>Cliff Period:</strong> 1 year</li>
+                <li><strong>Vesting:</strong> 20% at 1-year cliff, then monthly for remaining 48 months (~1.67% per month)</li>
+            </ul>
+            <div class="example">
+                <strong>Example:</strong> 1,000 ISO grant on Jan 1, 2024 (5-year)
+                <ul>
+                    <li><strong>Jan 1, 2025:</strong> 200 shares (20% cliff)</li>
+                    <li><strong>Feb 1, 2025:</strong> ~16.67 shares</li>
+                    <li><strong>Mar 1, 2025:</strong> ~16.67 shares</li>
+                    <li>...continues monthly through Jan 1, 2029</li>
+                </ul>
+            </div>
+
+            <h4>6-Year ISO Grants</h4>
+            <ul>
+                <li><strong>Total Duration:</strong> 6 years (72 months)</li>
+                <li><strong>Cliff Period:</strong> 2 years</li>
+                <li><strong>Vesting:</strong> ~33.3% at 2-year cliff, then monthly for remaining 48 months (~1.39% per month)</li>
+            </ul>
+            <div class="example">
+                <strong>Example:</strong> 1,000 ISO grant on Jan 1, 2024 (6-year)
+                <ul>
+                    <li><strong>Jan 1, 2026:</strong> 333 shares (~33.3% - 2-year cliff)</li>
+                    <li><strong>Feb 1, 2026:</strong> ~13.89 shares</li>
+                    <li><strong>Mar 1, 2026:</strong> ~13.89 shares</li>
+                    <li>...continues monthly through Jan 1, 2030</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="rule-card">
+            <h3>Performance Bonuses (RSUs)</h3>
+            <p><strong>Vesting Frequency: BIANNUAL (same as standard RSUs)</strong></p>
+            <ul>
+                <li><strong>Q1 Bonus:</strong> 2 years, vests biannually</li>
+                <li><strong>Q2-Q4 Bonus:</strong> 1 year, vests biannually (may have shorter cliff or no cliff)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Stock Price Calculation -->
+    <section class="rules-section">
+        <h2>💰 Stock Price & Valuation</h2>
+        
+        <div class="rule-card">
+            <h3>Grant Price (Cost Basis)</h3>
+            <p><strong>How it's determined:</strong></p>
+            <ul>
+                <li>Price is the Fair Market Value (FMV) on the <strong>grant date</strong></li>
+                <li>For SpaceX, this is typically the price from the most recent tender offer or valuation</li>
+                <li>This becomes your cost basis for each vest event</li>
+                <li>Used to calculate capital gains when you eventually sell</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Vest Date Price</h3>
+            <p><strong>Tax implications:</strong></p>
+            <ul>
+                <li>Price on the day shares vest determines ordinary income tax liability</li>
+                <li>For RSUs: You're taxed on (shares vested × vest date price)</li>
+                <li>Tax is withheld either via shares or cash</li>
+                <li>This vested price becomes your new cost basis for future capital gains</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Current Market Price</h3>
+            <p><strong>For calculations:</strong></p>
+            <ul>
+                <li>Latest known tender offer price or secondary market price</li>
+                <li>Used to calculate unrealized gains</li>
+                <li>Used in Finance Deep Dive for tax projections</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Tax Withholding -->
+    <section class="rules-section">
+        <h2>🧾 Tax Withholding at Vest</h2>
+        
+        <div class="rule-card">
+            <h3>RSU Tax Treatment</h3>
+            <p><strong>At vest date:</strong></p>
+            <ul>
+                <li>RSUs are taxed as <strong>ordinary income</strong> (W-2)</li>
+                <li>Tax = (Shares Vested × FMV at Vest) × Your Tax Rate</li>
+                <li>Typical withholding: ~37% federal + ~10% state (CA) = 47% total</li>
+            </ul>
+            
+            <p><strong>Two ways to pay taxes:</strong></p>
+            <ol>
+                <li><strong>Sell-to-Cover:</strong> Company sells enough shares to cover taxes
+                    <ul>
+                        <li>Example: 100 shares vest, 47 shares sold for taxes, you receive 53 shares</li>
+                    </ul>
+                </li>
+                <li><strong>Cash-to-Cover:</strong> You pay taxes in cash, keep all shares
+                    <ul>
+                        <li>Example: 100 shares vest, you pay $X in cash, keep all 100 shares</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="rule-card">
+            <h3>Shares Received Calculation</h3>
+            <p><strong>If Sell-to-Cover:</strong></p>
+            <code>Shares Received = Shares Vested - Shares Sold for Taxes</code>
+            
+            <p><strong>If Cash-to-Cover:</strong></p>
+            <code>Shares Received = Shares Vested</code>
+        </div>
+    </section>
+
+    <!-- Capital Gains -->
+    <section class="rules-section">
+        <h2>📈 Capital Gains (When You Sell)</h2>
+        
+        <div class="rule-card">
+            <h3>Short-Term Capital Gains</h3>
+            <p><strong>Holding Period:</strong> Less than 1 year from vest date</p>
+            <ul>
+                <li>Taxed as <strong>ordinary income</strong></li>
+                <li>Added to your W-2 income</li>
+                <li>Tax rate = Your marginal tax bracket (22%-37%+)</li>
+            </ul>
+            
+            <p><strong>Calculation:</strong></p>
+            <code>Gain = (Sale Price - Vest Date Price) × Shares Sold</code>
+        </div>
+
+        <div class="rule-card">
+            <h3>Long-Term Capital Gains</h3>
+            <p><strong>Holding Period:</strong> 1 year or more from vest date</p>
+            <ul>
+                <li>Taxed at <strong>preferential rates</strong></li>
+                <li>Federal: 0%, 15%, or 20% (based on income)</li>
+                <li>State: Still applies (e.g., CA 9.3%)</li>
+                <li>Much lower than ordinary income rates!</li>
+            </ul>
+            
+            <p><strong>Calculation:</strong></p>
+            <code>Gain = (Sale Price - Vest Date Price) × Shares Sold</code>
+        </div>
+
+        <div class="rule-card">
+            <h3>Cost Basis Tracking</h3>
+            <p><strong>Important:</strong> Each vest event has its own cost basis</p>
+            <ul>
+                <li>Cost Basis = FMV on the vest date</li>
+                <li>When selling, you choose which "lots" to sell (FIFO, LIFO, specific identification)</li>
+                <li>Holding period starts on vest date (not grant date!)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ISOs Special Rules -->
+    <section class="rules-section">
+        <h2>🎯 ISO (Incentive Stock Option) Special Rules</h2>
+        
+        <div class="rule-card">
+            <h3>Exercise and Vesting</h3>
+            <ul>
+                <li>ISOs must be exercised (you buy the shares)</li>
+                <li>Exercise Price = FMV at grant date (your cost)</li>
+                <li>Can exercise vested options at any time</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Alternative Minimum Tax (AMT)</h3>
+            <p><strong>At Exercise:</strong></p>
+            <ul>
+                <li>AMT may apply on the "spread" (FMV at exercise - Exercise Price)</li>
+                <li>Spread is treated as income for AMT purposes</li>
+                <li>AMT rate: 26-28%</li>
+                <li><strong>Important:</strong> You may owe AMT even if you don't sell!</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Qualifying Disposition</h3>
+            <p><strong>To get favorable tax treatment, hold:</strong></p>
+            <ul>
+                <li>2 years from grant date, AND</li>
+                <li>1 year from exercise date</li>
+            </ul>
+            
+            <p><strong>If qualified:</strong></p>
+            <ul>
+                <li>Entire gain taxed as long-term capital gains</li>
+                <li>Gain = Sale Price - Exercise Price</li>
+            </ul>
+            
+            <p><strong>If disqualifying (sold too early):</strong></p>
+            <ul>
+                <li>Spread at exercise = ordinary income</li>
+                <li>Additional gain = short or long-term capital gains</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Unrealized Gains -->
+    <section class="rules-section">
+        <h2>💵 Unrealized Gain Calculation</h2>
+        
+        <div class="rule-card">
+            <h3>Per Vest Event</h3>
+            <code>Unrealized Gain = (Current Price - Cost Basis per Share) × Shares Held</code>
+            
+            <p><strong>Where:</strong></p>
+            <ul>
+                <li>Current Price = Latest market/tender price</li>
+                <li>Cost Basis per Share = FMV at vest date</li>
+                <li>Shares Held = Shares received after tax withholding</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Total Unrealized Gain</h3>
+            <code>Total = Sum of all vest event unrealized gains</code>
+            
+            <p><strong>This represents:</strong></p>
+            <ul>
+                <li>Paper gains if you sold all shares today</li>
+                <li>Subject to capital gains tax (short or long-term)</li>
+                <li>Not realized until you actually sell</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Finance Deep Dive Logic -->
+    <section class="rules-section">
+        <h2>🔬 Finance Deep Dive Calculations</h2>
+        
+        <div class="rule-card">
+            <h3>Tax Estimates</h3>
+            <p><strong>The sliders calculate:</strong></p>
+            <ul>
+                <li><strong>Federal Tax Rate:</strong> Your marginal bracket (for short-term gains)</li>
+                <li><strong>State Tax Rate:</strong> Your state rate (applies to all gains)</li>
+                <li><strong>Long-Term Cap Gains:</strong> Federal rate for shares held 1+ year</li>
+            </ul>
+            
+            <p><strong>Per vest event:</strong></p>
+            <ul>
+                <li>If held &lt; 1 year: Tax = Unrealized Gain × (Federal Rate + State Rate)</li>
+                <li>If held ≥ 1 year: Tax = Unrealized Gain × (Cap Gains Rate + State Rate)</li>
+            </ul>
+        </div>
+
+        <div class="rule-card">
+            <h3>Vested vs. All Shares Toggle</h3>
+            <ul>
+                <li><strong>Vested Only:</strong> Shows only shares that have vested (you own them now)</li>
+                <li><strong>All Shares:</strong> Includes future unvested shares (for planning)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+        <p><strong>⚠️ Important:</strong> These rules are based on typical SpaceX equity compensation structures and US tax law. Your specific situation may vary. Always consult with a tax professional or financial advisor for personalized advice.</p>
+    </div>
+</div>
+
+<style>
+.rules-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+.rules-section {
+    margin-bottom: 3rem;
+}
+
+.rules-section h2 {
+    color: var(--accent);
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.rule-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rule-card.highlight {
+    border: 2px solid var(--accent);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(79, 70, 229, 0.05) 100%);
+}
+
+.rule-card.highlight h3 {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.rule-card h3 {
+    color: var(--text);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.rule-card h4 {
+    color: var(--text);
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.rule-card ul, .rule-card ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.rule-card li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.rule-card code {
+    display: block;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-family: 'Courier New', monospace;
+    color: var(--accent);
+}
+
+.example {
+    background: var(--background);
+    border-left: 4px solid var(--success);
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+.example strong {
+    color: var(--success);
+}
+
+.disclaimer {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.disclaimer p {
+    margin: 0;
+    color: #856404;
+}
+
+@media (max-width: 768px) {
+    .rules-page {
+        padding: 1rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .rules-section h2 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
