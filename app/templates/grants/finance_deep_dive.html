@@ -188,11 +188,12 @@
                             <th>Vest Date</th>
                             <th>Status</th>
                             <th>Shares Held</th>
-                            <th>Cost Basis/Share</th>
-                            <th>Current Price</th>
+                            <th>Cost at Vest</th>
+                            <th>Tax Paid at Vest</th>
+                            <th>Current Total Value</th>
                             <th>Holding Period</th>
                             <th>Unrealized Gain</th>
-                            <th>Est. Tax</th>
+                            <th>Est. Tax on Sale</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,8 +213,15 @@
                                 {% endif %}
                             </td>
                             <td><strong>{{ "{:,.0f}".format(ve_data.shares_held) }}</strong></td>
-                            <td>${{ "{:,.2f}".format(ve_data.cost_basis_per_share) }}</td>
-                            <td>${{ "{:,.2f}".format(latest_stock_price) }}</td>
+                            <td>${{ "{:,.2f}".format(ve_data.cost_basis) }}</td>
+                            <td>
+                                {% if ve_data.has_vested %}
+                                    ${{ "{:,.2f}".format(ve.tax_withheld) }}
+                                {% else %}
+                                    <span style="color: var(--text-secondary);">—</span>
+                                {% endif %}
+                            </td>
+                            <td><strong>${{ "{:,.2f}".format(ve_data.current_value) }}</strong></td>
                             <td>
                                 {{ ve_data.days_held }} days
                                 {% if ve_data.has_vested %}
