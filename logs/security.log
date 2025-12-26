@@ -1,0 +1,1 @@
+2025-12-25 21:22:56 | WARNING | {"timestamp": "2025-12-26T05:22:56.405394", "event_type": "AUTH_FAILURE", "user_id": null, "username": "stephen", "ip_address": "127.0.0.1", "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.", "reason": "invalid_credentials"}

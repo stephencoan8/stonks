@@ -6,6 +6,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
 from dotenv import load_dotenv
 import os
 
@@ -16,30 +20,47 @@ load_dotenv()
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
+csrf = CSRFProtect()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+talisman = Talisman()
 
 
 def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__)
     
-    # Configuration
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///stonks.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # Mail configuration
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+    # Load secure configuration
+    from app.config import Config
+    app.config.from_object(Config)
     
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    login_manager.session_protection = 'strong'  # Enhanced session protection
     mail.init_app(app)
+    csrf.init_app(app)
+    limiter.init_app(app)
+    
+    # Initialize Talisman with security headers
+    if app.config.get('TALISMAN_FORCE_HTTPS'):
+        talisman.init_app(
+            app,
+            force_https=True,
+            strict_transport_security=True,
+            strict_transport_security_max_age=31536000,
+            content_security_policy=app.config.get('TALISMAN_CONTENT_SECURITY_POLICY'),
+            content_security_policy_nonce_in=['script-src'],
+            feature_policy={
+                'geolocation': "'none'",
+                'camera': "'none'",
+                'microphone': "'none'"
+            }
+        )
     
     # Register blueprints
     from app.routes.auth import auth_bp
@@ -54,6 +75,9 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(settings_bp)
     
+    # Register error handlers
+    register_error_handlers(app)
+    
     # Create database tables
     with app.app_context():
         db.create_all()
@@ -65,8 +89,34 @@ def create_app():
     return app
 
 
+def register_error_handlers(app):
+    """Register error handlers for security."""
+    from flask import render_template
+    from app.utils.audit_log import AuditLogger
+    
+    @app.errorhandler(403)
+    def forbidden(e):
+        AuditLogger.log_security_event('403_FORBIDDEN', {'error': str(e)})
+        return render_template('errors/403.html'), 403
+    
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(e):
+        AuditLogger.log_security_event('500_ERROR', {'error': str(e)})
+        return render_template('errors/500.html'), 500
+    
+    @app.errorhandler(429)
+    def rate_limit_exceeded(e):
+        AuditLogger.log_security_event('RATE_LIMIT_EXCEEDED', {'error': str(e)})
+        return render_template('errors/429.html'), 429
+
+
 @login_manager.user_loader
 def load_user(user_id):
     """Load user by ID for Flask-Login."""
     from app.models.user import User
     return User.query.get(int(user_id))
+

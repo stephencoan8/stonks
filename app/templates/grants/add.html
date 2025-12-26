@@ -11,6 +11,7 @@
 
     <div class="form-card">
         <form method="POST" class="grant-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-row">
                 <div class="form-group">
                     <label for="grant_date">Grant Date *</label>

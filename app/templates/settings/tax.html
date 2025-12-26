@@ -27,6 +27,7 @@
 
         <!-- Automatic Mode Form -->
         <form method="POST" id="settingsForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="use_manual_rates" id="useManualInput" value="{{ 'true' if tax_profile.use_manual_rates else 'false' }}">
             
             <div class="settings-section" id="automaticSection" {% if tax_profile.use_manual_rates %}style="display: none;"{% endif %}>

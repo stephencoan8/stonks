@@ -10,6 +10,7 @@
 
 <div class="card">
     <form method="POST" class="grant-form" onsubmit="console.log('Form submitting...'); return true;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-grid">
             <!-- Grant Date -->
             <div class="form-group">

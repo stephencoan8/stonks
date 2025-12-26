@@ -1,18 +1,21 @@
 """
 User model for authentication and user management.
+Enhanced with security features for account protection.
 """
 
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import secrets
 
 
 class User(UserMixin, db.Model):
-    """User model for authentication."""
+    """User model for authentication with enhanced security."""
     
     __tablename__ = 'users'
     
+    # Core fields
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
@@ -20,16 +23,99 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Security fields
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    is_locked = db.Column(db.Boolean, default=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    last_password_change = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Password reset fields
+    password_reset_token = db.Column(db.String(255), nullable=True)
+    password_reset_expiry = db.Column(db.DateTime, nullable=True)
+    
+    # Email verification
+    email_verified = db.Column(db.Boolean, default=False)
+    email_verification_token = db.Column(db.String(255), nullable=True)
+    
+    # Two-factor authentication
+    totp_secret = db.Column(db.String(32), nullable=True)
+    totp_enabled = db.Column(db.Boolean, default=False)
+    backup_codes = db.Column(db.Text, nullable=True)  # JSON array of hashed codes
+    
+    # Session security
+    session_token = db.Column(db.String(255), nullable=True)
+    
     # Relationships
     grants = db.relationship('Grant', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password: str) -> None:
-        """Hash and set the user's password."""
-        self.password_hash = generate_password_hash(password)
+        """
+        Hash and set the user's password.
+        Also updates last_password_change timestamp.
+        """
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256:600000')
+        self.last_password_change = datetime.utcnow()
     
     def check_password(self, password: str) -> bool:
         """Check if provided password matches the hash."""
         return check_password_hash(self.password_hash, password)
     
+    def is_account_locked(self) -> bool:
+        """Check if account is currently locked."""
+        if not self.is_locked:
+            return False
+        
+        # Check if temporary lock has expired
+        if self.locked_until and datetime.utcnow() > self.locked_until:
+            self.is_locked = False
+            self.locked_until = None
+            self.failed_login_attempts = 0
+            db.session.commit()
+            return False
+        
+        return True
+    
+    def generate_password_reset_token(self) -> str:
+        """Generate a secure password reset token."""
+        token = secrets.token_urlsafe(32)
+        self.password_reset_token = generate_password_hash(token)
+        return token
+    
+    def verify_password_reset_token(self, token: str) -> bool:
+        """Verify password reset token."""
+        if not self.password_reset_token:
+            return False
+        return check_password_hash(self.password_reset_token, token)
+    
+    def generate_email_verification_token(self) -> str:
+        """Generate a secure email verification token."""
+        token = secrets.token_urlsafe(32)
+        self.email_verification_token = generate_password_hash(token)
+        return token
+    
+    def verify_email_token(self, token: str) -> bool:
+        """Verify email verification token."""
+        if not self.email_verification_token:
+            return False
+        return check_password_hash(self.email_verification_token, token)
+    
+    def generate_totp_secret(self) -> str:
+        """Generate TOTP secret for 2FA."""
+        import pyotp
+        secret = pyotp.random_base32()
+        self.totp_secret = secret
+        return secret
+    
+    def verify_totp(self, token: str) -> bool:
+        """Verify TOTP token."""
+        if not self.totp_enabled or not self.totp_secret:
+            return False
+        
+        import pyotp
+        totp = pyotp.TOTP(self.totp_secret)
+        return totp.verify(token, valid_window=1)
+    
     def __repr__(self) -> str:
         return f'<User {self.username}>'
+
