@@ -921,7 +921,11 @@ showAllToggle.addEventListener('change', (e) => {
     
     // Toggle visibility of unvested rows
     document.querySelectorAll('.data-unvested').forEach(el => {
-        el.style.display = showAll ? '' : 'none';
+        if (showAll) {
+            el.style.display = 'flex';  // Use flex to maintain column layout
+        } else {
+            el.style.display = 'none';
+        }
     });
     
     // Recalculate taxes
@@ -1119,7 +1123,15 @@ function applyColumnSettings() {
         // Use flexbox for reordering
         headerRow.style.display = 'flex';
         bodyRows.forEach(row => {
-            row.style.display = 'flex';
+            // Check if row should be hidden (unvested rows when showing vested only)
+            const isUnvested = row.classList.contains('data-unvested');
+            const showAll = showAllToggle.checked;
+            
+            // Only set display to flex if row should be visible
+            if (!isUnvested || showAll) {
+                row.style.display = 'flex';
+            }
+            
             row.querySelectorAll('td').forEach(cell => {
                 cell.style.flex = '1';
                 cell.style.minWidth = '100px';
