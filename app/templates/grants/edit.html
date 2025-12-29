@@ -63,6 +63,15 @@
                     <option value="long_term" {% if grant.bonus_type == 'long_term' %}selected{% endif %}>Long Term</option>
                 </select>
             </div>
+            
+            <!-- ESPP Discount (conditional) -->
+            <div class="form-group" id="espp_discount_group" style="display: none;">
+                <label for="espp_discount">ESPP Discount %</label>
+                <input type="number" id="espp_discount" name="espp_discount" 
+                       value="{{ grant.espp_discount or 0.15 }}" 
+                       step="0.01" min="0" max="0.25">
+                <small class="form-help">Standard is 15% (0.15). IRS max is 15%.</small>
+            </div>
 
             <!-- Vest Years (for Kickass) -->
             <div class="form-group" id="vest_years_group" style="display: none;">
@@ -115,6 +124,8 @@
     const vestYearsInput = document.getElementById('vest_years');
     const shareTypeGroup = document.getElementById('share_type_group');
     const shareTypeSelect = document.getElementById('share_type');
+    const esppDiscountGroup = document.getElementById('espp_discount_group');
+    const esppDiscountInput = document.getElementById('espp_discount');
 
     function updateFormFields() {
         const grantType = grantTypeSelect.value;
@@ -146,6 +157,26 @@
         } else {
             shareTypeGroup.style.display = 'block';
             shareTypeSelect.removeAttribute('disabled');
+        }
+        
+        // Show ESPP discount for ESPP grants
+        if (grantType === 'espp') {
+            esppDiscountGroup.style.display = 'block';
+            esppDiscountInput.removeAttribute('disabled');
+        } else {
+            esppDiscountGroup.style.display = 'none';
+            esppDiscountInput.setAttribute('disabled', 'disabled');
+        }
+
+        // Show ESPP discount for ESPP grants
+        if (grantType === 'espp') {
+            esppDiscountGroup.style.display = 'block';
+            esppDiscountInput.setAttribute('required', 'required');
+            esppDiscountInput.removeAttribute('disabled');
+        } else {
+            esppDiscountGroup.style.display = 'none';
+            esppDiscountInput.removeAttribute('required');
+            esppDiscountInput.setAttribute('disabled', 'disabled');
         }
     }
 

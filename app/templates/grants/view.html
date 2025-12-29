@@ -40,6 +40,20 @@
                     <span class="detail-label">Price at Grant</span>
                     <span class="detail-value">${{ "{:,.2f}".format(grant.share_price_at_grant) }}</span>
                 </div>
+                {% if grant.grant_type == 'espp' and grant.espp_discount %}
+                <div class="detail-item">
+                    <span class="detail-label">ESPP Discount</span>
+                    <span class="detail-value highlight">{{ "{:.0f}".format(grant.espp_discount * 100) }}%</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Actual Cost Basis</span>
+                    <span class="detail-value">${{ "{:,.2f}".format(grant.actual_cost_basis) }} per share</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Discount Gain</span>
+                    <span class="detail-value highlight">${{ "{:,.2f}".format(grant.espp_discount_gain) }}</span>
+                </div>
+                {% endif %}
                 <div class="detail-item">
                     <span class="detail-label">Total Value</span>
                     <span class="detail-value highlight">${{ "{:,.2f}".format(grant.total_value_at_grant) }}</span>

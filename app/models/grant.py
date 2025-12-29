@@ -50,6 +50,9 @@ class Grant(db.Model):
     vest_years = db.Column(db.Integer, nullable=False)
     cliff_years = db.Column(db.Float, nullable=False)
     
+    # ESPP specific - discount percentage (typically 15% = 0.15)
+    espp_discount = db.Column(db.Float, nullable=True, default=0.0)
+    
     # For annual performance grants
     bonus_type = db.Column(db.String(20), nullable=True)  # short_term or long_term
     
@@ -87,6 +90,37 @@ class Grant(db.Model):
         """Get the current (latest) stock price."""
         from app.utils.init_db import get_latest_stock_price
         return get_latest_stock_price()
+    
+    @property
+    def actual_cost_basis(self) -> float:
+        """
+        Calculate actual cost basis per share.
+        For ESPP: market_price × (1 - discount) = what you actually paid
+        For NQESPP: full market price
+        For ISOs: strike price
+        For RSUs/Cash: $0 (granted, not purchased)
+        """
+        # ESPP with discount (typically 15%)
+        if self.grant_type == GrantType.ESPP.value and self.espp_discount:
+            return self.share_price_at_grant * (1 - self.espp_discount)
+        
+        # NQESPP or ISOs - full strike/market price
+        if self.grant_type == GrantType.NQESPP.value or self.share_type in [ShareType.ISO_5Y.value, ShareType.ISO_6Y.value]:
+            return self.share_price_at_grant
+        
+        # RSUs and Cash grants - no cost basis (granted)
+        return 0.0
+    
+    @property
+    def espp_discount_gain(self) -> float:
+        """
+        Calculate immediate gain from ESPP discount.
+        This is the discount value: shares × market_price × discount_rate
+        Example: 100 shares × $100 × 0.15 = $1,500 immediate gain
+        """
+        if self.grant_type == GrantType.ESPP.value and self.espp_discount:
+            return self.share_quantity * self.share_price_at_grant * self.espp_discount
+        return 0.0
     
     @property
     def current_value(self) -> float:

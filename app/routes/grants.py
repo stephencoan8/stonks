@@ -42,6 +42,14 @@ def add_grant():
             vest_years = request.form.get('vest_years')
             notes = request.form.get('notes', '')
             
+            # ESPP discount (typically 15% = 0.15)
+            espp_discount = request.form.get('espp_discount')
+            if espp_discount:
+                espp_discount = float(espp_discount)
+            else:
+                # Default 15% for ESPP, 0% for others
+                espp_discount = 0.15 if grant_type == 'espp' else 0.0
+            
             # Get stock price at grant date
             share_price = get_stock_price_at_date(grant_date)
             
@@ -63,6 +71,7 @@ def add_grant():
                 vest_years=vest_years,
                 cliff_years=cliff_years,
                 bonus_type=bonus_type,
+                espp_discount=espp_discount,
                 notes=notes
             )
             
@@ -147,6 +156,14 @@ def edit_grant(grant_id):
             vest_years = request.form.get('vest_years') or None
             notes = request.form.get('notes', '')
             
+            # ESPP discount (typically 15% = 0.15)
+            espp_discount = request.form.get('espp_discount')
+            if espp_discount:
+                espp_discount = float(espp_discount)
+            else:
+                # Default 15% for ESPP, 0% for others
+                espp_discount = 0.15 if grant_type == 'espp' else 0.0
+            
             # Get stock price at grant date
             share_price = get_stock_price_at_date(grant_date)
             
@@ -166,6 +183,7 @@ def edit_grant(grant_id):
             grant.vest_years = vest_years
             grant.cliff_years = cliff_years
             grant.bonus_type = bonus_type
+            grant.espp_discount = espp_discount
             grant.notes = notes
             
             # Delete old vest events and recalculate

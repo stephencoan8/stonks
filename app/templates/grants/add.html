@@ -61,6 +61,14 @@
                     </select>
                 </div>
             </div>
+            
+            <div class="form-row" id="espp_discount_row" style="display:none;">
+                <div class="form-group">
+                    <label for="espp_discount">ESPP Discount %</label>
+                    <input type="number" id="espp_discount" name="espp_discount" step="0.01" min="0" max="0.25" value="0.15">
+                    <small class="form-hint">Standard ESPP discount is 15% (0.15). Max allowed by IRS is 15%.</small>
+                </div>
+            </div>
 
             <div class="form-row" id="vest_years_row" style="display:none;">
                 <div class="form-group">
@@ -86,9 +94,11 @@
 function updateFormFields() {
     const grantType = document.getElementById('grant_type').value;
     const bonusRow = document.getElementById('bonus_type_row');
+    const esppRow = document.getElementById('espp_discount_row');
     const vestRow = document.getElementById('vest_years_row');
     
     bonusRow.style.display = grantType === 'annual_performance' ? 'flex' : 'none';
+    esppRow.style.display = grantType === 'espp' ? 'flex' : 'none';
     vestRow.style.display = grantType === 'kickass' ? 'flex' : 'none';
 }
 </script>
